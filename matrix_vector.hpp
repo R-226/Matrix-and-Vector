@@ -16,9 +16,6 @@ public:
     mvector(const mvector &origin); // 拷贝构造函数
     ~mvector(void);                 // 析构函数
     void set_size(int _variable);
-    int get_size(void);
-    mvector sum_vector(mvector &_sum_vector);
-    double vec_dot(mvector _dot_vector);
     mvector &operator=(const mvector &origin) // 向量赋值
     {
         double *temp_num = new double[origin._size];
@@ -29,8 +26,13 @@ public:
         this->_size = origin._size;
         return *this;
     }
-    mvector operator+(mvector &_sum_vector) // 向量加法
+    mvector operator+(const mvector &_sum_vector) // 向量加法
     {
+        if (this->_size != _sum_vector._size)
+        {
+            cout << "The size of the two vectors Imcompable!(v+v)" << endl;
+            abort();
+        }
         mvector _result_of_sum_vector(this->_size);
         for (int i = 0; i < this->_size; i++)
         {
@@ -38,8 +40,13 @@ public:
         }
         return _result_of_sum_vector;
     }
-    mvector operator-(mvector &_sum_vector) // 向量减法
+    mvector operator-(const mvector &_sum_vector) // 向量减法
     {
+        if (this->_size != _sum_vector._size)
+        {
+            cout << "The size of the two vectors Imcompable!(v-v)" << endl;
+            abort();
+        }
         mvector _result_of_sum_vector(this->_size);
         for (int i = 0; i < this->_size; i++)
         {
@@ -47,8 +54,22 @@ public:
         }
         return _result_of_sum_vector;
     }
-    double operator*(mvector _dot_vector) // 向量点积
+    mvector operator*(const double _parameter) // 向量数乘
     {
+        mvector _result_of_vec_mul_num(this->_size);
+        for (int i = 0; i < this->_size; i++)
+        {
+            _result_of_vec_mul_num.elements[i] = this->elements[i] * _parameter;
+        }
+        return _result_of_vec_mul_num;
+    }
+    double operator*(const mvector &_dot_vector) // 向量点积
+    {
+        if (this->_size != _dot_vector._size)
+        {
+            cout << "The size of the two vectors Imcompable!(v*v)" << endl;
+            abort();
+        }
         double _result_of_dot = 0;
         for (int i = 0; i < _size; i++)
         {
@@ -59,11 +80,14 @@ public:
 };
 
 // member of vector
-mvector::mvector(void) {};
+mvector::mvector(void)
+{
+    this->elements = NULL;
+};
 mvector::mvector(int _variable)
 {
+    this->elements = NULL;
     set_size(_variable);
-    elements = new double[_variable];
     for (int i = 0; i < _variable; i++)
     {
         elements[i] = 0;
@@ -71,11 +95,11 @@ mvector::mvector(int _variable)
 }
 mvector::mvector(const mvector &origin)
 {
-    set_size(origin._size);
-    elements = new double[_size];
+    this->elements = NULL;
+    this->set_size(origin._size);
     for (int i = 0; i < _size; i++)
     {
-        elements[i] = origin.elements[i];
+        this->elements[i] = origin.elements[i];
     }
 }
 mvector::~mvector(void)
@@ -85,10 +109,9 @@ mvector::~mvector(void)
 void mvector::set_size(int _variable)
 {
     _size = _variable;
-}
-int mvector::get_size(void)
-{
-    return _size;
+    if (this->elements != NULL)
+        delete this->elements;
+    this->elements = new double[_variable];
 }
 
 // matrix
@@ -105,10 +128,6 @@ public:
     matrix(const matrix &origin); // 拷贝构造函数
     ~matrix(void);                // 析构函数
     void set_size(int variable_1, int variable_2);
-    int get_row(void);
-    int get_column(void);
-    matrix sum_matrix(matrix &_sum_matrix);
-    mvector mat_mul_vec(mvector &_mvec);
     matrix &operator=(const matrix &origin) // 矩阵赋值
     {
         double **temp_num = new double *[origin.row];
@@ -125,11 +144,11 @@ public:
         this->column = origin.column;
         return *this;
     }
-    matrix operator+(matrix &_sum_matrix) // 矩阵加法
+    matrix operator+(const matrix &_sum_matrix) // 矩阵加法
     {
         if (this->row != _sum_matrix.row || this->column != _sum_matrix.column)
         {
-            cout << "This size of the two matrix are imcompatable!(sum)" << endl;
+            cout << "The size of the two vectors Imcompable!(m+m)" << endl;
             abort();
         }
         matrix _result_of_sum_matrix(row, column);
@@ -142,11 +161,11 @@ public:
         }
         return _result_of_sum_matrix;
     }
-    matrix operator-(matrix &_sum_matrix) // 矩阵减法
+    matrix operator-(const matrix &_sum_matrix) // 矩阵减法
     {
         if (this->row != _sum_matrix.row || this->column != _sum_matrix.column)
         {
-            cout << "This size of the two matrix are imcompatable!(sum)" << endl;
+            cout << "The size of the two vectors Imcompable!(m-m)" << endl;
             abort();
         }
         matrix _result_of_sum_matrix(row, column);
@@ -159,11 +178,23 @@ public:
         }
         return _result_of_sum_matrix;
     }
+    matrix operator*(double _parameter) // 矩阵数乘
+    {
+        matrix _result_of_mat_mul_num(this->row, this->column);
+        for (int i = 0; i < this->row; i++)
+        {
+            for (int j = 0; j < this->column; j++)
+            {
+                _result_of_mat_mul_num.elements[i][j] = _parameter * this->elements[i][j];
+            }
+        }
+        return _result_of_mat_mul_num;
+    }
     matrix operator*(const matrix &origin) // 矩阵乘法
     {
         if (this->row != origin.column)
         {
-            cout << "The size of the two matrix are imcompatable!(mul)" << endl;
+            cout << "The size of the two matrix are imcompatable!(m*m)" << endl;
             abort();
         }
         matrix temp_matrix(this->row, origin.column);
@@ -180,16 +211,35 @@ public:
         }
         return temp_matrix;
     }
+    mvector operator*(mvector &_mvec) // 矩阵向量乘
+    {
+        if (column != _mvec._size)
+        {
+            cout << "The size of the matrix and the vector are Imcompable!(m*v)" << endl;
+            abort();
+        }
+        mvector result_of_mat_vec(_mvec._size);
+        for (int i = 0; i < row; i++)
+        {
+            for (int j = 0; j < _mvec._size; j++)
+            {
+                result_of_mat_vec.elements[i] += elements[i][j] * _mvec.elements[j];
+            }
+        }
+        return result_of_mat_vec;
+    }
 };
 // member of matrix
-matrix::matrix(void) {};            // 默认构造函数
+matrix::matrix(void) // 默认构造函数
+{
+    this->elements = NULL;
+};
 matrix::matrix(int row, int column) // 含参数构造函数
 {
+    this->elements = NULL;
     set_size(row, column);
-    elements = new double *[row];
     for (int i = 0; i < row; i++)
     {
-        elements[i] = new double[column];
         for (int j = 0; j < column; j++)
         {
             elements[i][j] = 0;
@@ -198,11 +248,10 @@ matrix::matrix(int row, int column) // 含参数构造函数
 }
 matrix::matrix(const matrix &origin) // 拷贝构造函数
 {
+    this->elements = NULL;
     set_size(origin.row, origin.column);
-    elements = new double *[origin.row];
     for (int i = 0; i < origin.row; i++)
     {
-        elements[i] = new double[origin.column];
         for (int j = 0; j < origin.column; j++)
         {
             elements[i][j] = origin.elements[i][j];
@@ -215,36 +264,21 @@ matrix::~matrix(void) // 析构函数
         delete elements[i];
     delete elements;
 }
-int matrix::get_row(void)
-{
-    return row;
-}
-int matrix::get_column(void)
-{
-    return column;
-}
 void matrix::set_size(int variable_1, int variable_2)
 {
     row = variable_1;
     column = variable_2;
-}
-
-mvector matrix::mat_mul_vec(mvector &_mvec)
-{
-    if (column != _mvec.get_size())
+    if (this->elements != NULL)
+        delete this->elements;
+    this->elements = new double *[variable_1];
+    for (int i = 0; i < variable_1; i++)
     {
-        cout << "The size of the matrix and the vector are Imcompable!" << endl;
-        abort();
-    }
-    mvector result_of_mat_vec(_mvec.get_size());
-    for (int i = 0; i < row; i++)
-    {
-        for (int j = 0; j < _mvec.get_size(); j++)
+        this->elements[i] = new double[variable_2];
+        for (int j = 0; j < variable_2; j++)
         {
-            result_of_mat_vec.elements[i] += elements[i][j] * _mvec.elements[j];
+            this->elements[i][j] = 0;
         }
     }
-    return result_of_mat_vec;
 }
 
 #endif
